@@ -16,7 +16,7 @@ class Phrase():
     def results(self):
         i=1
         for word in self.words:
-            print("Word {i}:".format(i=i))
+            print("*****\nWord {i}:".format(i=i))
             word.selfReport = True
             word.results()
             i+=1
@@ -36,6 +36,10 @@ class Phrase():
         self.disallowed = ''.join(sorted(list(set(self.disallowed+charList))))
         self.results()
 
+    def prefChars(self,charList: str):
+        for word in self.words:
+            word.prefChars=charList
+
     def sortWords(self):
         for word in self.words:
             word.sortList()
@@ -47,13 +51,16 @@ class Phrase():
                     thisVal=thisWord.wordVal(thisWord.sortedList[0])
                     sVal=self.sortedList[i].wordVal(self.sortedList[i].sortedList[0])
                     if sVal >= thisVal:
-                        self.sortedList.insert(i,thisWord)
+                        self.sortedList.insert(i,word)
                         break
                     i+=1
     
     def bestWords(self):
         skips=''
+        n=1
         for word in self.sortedList:
+            #print("Word {i}:".format(i=n))
+            #word.show()
             word.skips=skips
             i=0
             found=False
@@ -62,17 +69,48 @@ class Phrase():
                     found=True
                     word.bestWord=thisWord
                     word.bestIndex=i
-                    skips = ''.join(sorted(list(set(skips+thisWord))))
+                    skips = ''.join(sorted(list(set(word.skips+thisWord))))
                 i+=1
             if not found:
                 thisWord=word.sortedList[0]
                 word.bestWord=thisWord
                 word.bestIndex=0
-                skips = ''.join(sorted(list(set(skips+thisWord))))
+                skips = ''.join(sorted(list(set(word.skips+thisWord))))
+            #print("Picked word: {s}".format(s=word.bestWord))
+            n+=1
         bestPhrase=''
         for word in self.words:
             bestPhrase += ' '+word.bestWord
         bestPhrase=bestPhrase.strip()
         print(bestPhrase)
                
+    def show(self,num:int=5):
+        i=1
+        for word in self.words:
+            print("*****\nWord {i}:".format(i=i))
+            word.selfReport = True
+            word.show(num)
+            i+=1
+       
+    def list(self,num:int=50):
+        def printRow(row:List[str]):
+            line = row[0]
+            for word in row[1:]:
+                line = line + " " + word
+            print(line)
 
+        i=0
+        while i < num:
+            row = []
+            stuffOnRow=False
+            j=0
+            while j < len(self.words):
+                #print("i={i},j={j},word='{word}'".format(i=i,j=j,word=self.words[j].sortedList[i]))
+                if len(self.words[j].sortedList)<=i:
+                    row.append("".ljust(self.words[j].length))
+                else:
+                    row.append(self.words[j].sortedList[i])
+                    stuffOnRow=True
+                j += 1
+            if stuffOnRow: printRow(row)
+            i += 1

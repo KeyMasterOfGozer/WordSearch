@@ -35,6 +35,7 @@ class WordList():
 	sortedList: List[str] = field(default_factory=list)
 	bestWord:str=''
 	bestIndex:int=0
+	prefChars:str=''
 
 	def count(self):
 		return len(self.words)
@@ -58,6 +59,15 @@ class WordList():
 		if FileName != '': self.wordFile = FileName
 		with open(self.wordFile) as word_file:
 			self.words = set(word_file.read().split())
+		newList=[]
+		for word in self.words:
+			if 1 in [c in word for c in 'aeiouy']:
+				newList.append(word)
+		self.words = newList
+		with open('banned.txt') as word_file:
+			banned = set(word_file.read().split())
+		for word in banned:
+			self.remove(word)
 		self.results()
 
 	def len(self,length:int):
@@ -84,6 +94,9 @@ class WordList():
 				newList.append(word)
 		self.words = newList
 		self.results()
+
+	def remove(self,word:str):
+		if word in self.words: self.words.remove(word)
 
 	def disallow(self,charList: str):
 		newList=[]
@@ -117,8 +130,29 @@ class WordList():
 			charList=''.join(sorted(list(set(letter["values"])-set(self.skips))))
 			if len(charList)> 0:
 				value += self.numMatches(ustr,charList)*letter["weight"]
+		if len(self.prefChars)> 0:
+			value += self.numMatches(ustr,self.prefChars)*10
 		return value
 
 	def sortList(self):
 		self.sortedList = sorted(self.words, key=self.wordVal, reverse=True)
 
+	def show(self,num:int=10,verbose:bool=False):
+		def printList(name:str,l:List[str]):
+			items=""
+			for item in l[0:num]:
+				items= items+" "+item
+			if len(l)<num+1:
+				elp=""
+			else:
+				elp="..."
+			print("{name}: {length}".format(name=name,length=len(l)))
+			print("\t[{words}{elp}]".format(words=items.strip(),elp=elp))
+		printList('words',self.words)
+		printList('sortedList',self.sortedList)
+		print("bestWord: {s}".format(s=self.bestWord))
+		if verbose:
+			print("needed: {s}".format(s=self.needed))
+			print("disallowed: {s}".format(s=self.disallowed))
+			print("length: {s}".format(s=self.length))
+			print("skips: {s}".format(s=self.skips))
