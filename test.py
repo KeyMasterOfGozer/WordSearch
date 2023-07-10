@@ -19,5 +19,11 @@ p.words[1].force('d',6)
 p.words[1].need('en')
 p.results()
 
+from phrase import Phrase
+p=Phrase([3,3,5,2,4])
 p.sortWords()
 p.bestWords()
+
+
+
+if 'pfg' in p.words[0].words: p.words[0].words.remove('pfg')
