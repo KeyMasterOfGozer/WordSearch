@@ -40,6 +40,45 @@ class Phrase():
         for word in self.words:
             word.prefChars=charList
 
+    def wordSet(self,word:str,position:int):
+        self.words[position-1].set(word)
+
+    def wordContains(self,word:str,position:int):
+        self.words[position-1].contains(word)
+
+    def wordDisallow(self,word:str,position:int):
+        self.words[position-1].disallow(''.join(filter(str.isalnum, word)))
+
+    def set(self,wordList:List[str]):
+        length=len(wordList)
+        if len(self.words) < length:
+            length=len(self.words)
+            print("Parameter is longer than Words in Phrase, only using first {n} words.".format(n=length))
+        for i in range(length):
+            self.wordSet(wordList[i],i+1)
+
+    def contains(self,wordList:List[str]):
+        length=len(wordList)
+        if len(self.words) < length:
+            length=len(self.words)
+            print("Parameter is longer than Words in Phrase, only using first {n} words.".format(n=length))
+        for i in range(length):
+            self.wordContains(wordList[i],i+1)
+
+    def wrongWord(self,wordList:List[str]):
+        length=len(wordList)
+        if len(self.words) < length:
+            length=len(self.words)
+            print("Parameter is longer than Words in Phrase, only using first {n} words.".format(n=length))
+        charList=''
+        for i in range(length):
+            filteredWord=''.join(filter(str.isalnum, wordList[i]))
+            charList=charList+filteredWord
+            for j in range(len(wordList[i])):
+                if wordList[i][j].isalpha():
+                    self.words[i].ban(wordList[i][j],j+1)
+        self.prefChars(charList)
+
     def sortWords(self):
         for word in self.words:
             word.sortList()
@@ -81,7 +120,17 @@ class Phrase():
         bestPhrase=''
         for word in self.words:
             bestPhrase += ' '+word.bestWord
-        bestPhrase=bestPhrase.strip()
+        bestPhrase="Best Guess: "+bestPhrase.strip()
+        print(bestPhrase)
+        bestPhrase=''
+        for word in self.words:
+            bestPhrase += ' '+word.words[0]
+        bestPhrase="Freq Words: "+bestPhrase.strip()
+        print(bestPhrase)
+        bestPhrase=''
+        for word in self.words:
+            bestPhrase += ' '+word.sortedList[0]
+        bestPhrase="Top Sorted: "+bestPhrase.strip()
         print(bestPhrase)
                
     def show(self,num:int=5):

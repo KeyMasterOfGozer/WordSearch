@@ -1,26 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
-
-LETTERS=[
-    {"values":"e","weight":18},
-    {"values":"t","weight":17},
-    {"values":"ainos","weight":16},
-    {"values":"h","weight":15},
-    {"values":"r","weight":14},
-    {"values":"d","weight":13},
-    {"values":"l","weight":12},
-    {"values":"u","weight":11},
-    {"values":"cm","weight":10},
-    {"values":"f","weight":9},
-    {"values":"wy","weight":8},
-    {"values":"gp","weight":7},
-    {"values":"b","weight":6},
-    {"values":"v","weight":5},
-    {"values":"k","weight":4},
-    {"values":"q","weight":3},
-    {"values":"jx","weight":2},
-    {"values":"z","weight":1},
-    ]
+from typing import List, Dict
 
 @dataclass
 class WordList():
@@ -29,13 +8,17 @@ class WordList():
 	disallowed: str = ''
 	length: int = -1
 	threshold : int = 20
-	wordFile: str = 'english-words/words_alpha.txt'
+	dictionary: str = 'dictionary/popular.txt'
+	wordFrequencyFile: str = 'wikipedia-word-frequency/results/enwiki-2023-04-13.txt'
+	LetterFrequencyFile: str = 'letter-freq-eng-text.txt'
 	selfReport: bool = True
 	skips:str=''
 	sortedList: List[str] = field(default_factory=list)
 	bestWord:str=''
 	bestIndex:int=0
 	prefChars:str=''
+	wordFreq: Dict = field(default_factory=dict)
+	letterFreq: Dict = field(default_factory=dict)
 
 	def count(self):
 		return len(self.words)
@@ -52,14 +35,16 @@ class WordList():
 
 	def __post_init__(self):
 		if len(self.words) == 0: 
-			self.load_words()
+			self.loadWords()
 		if self.length > 0: self.len(self.length)
+		self.loadWordFreq()
+		self.loadLetterFreq()
 
-	def load_words(self,FileName=''):
-		if FileName != '': self.wordFile = FileName
-		with open(self.wordFile) as word_file:
+	def loadWords(self,FileName=''):
+		if FileName != '': self.dictionary = FileName
+		with open(self.dictionary) as word_file:
 			self.words = set(word_file.read().split())
-		newList=[]
+		newList=['a','i']
 		for word in self.words:
 			if 1 in [c in word for c in 'aeiouy']:
 				newList.append(word)
@@ -68,7 +53,30 @@ class WordList():
 			banned = set(word_file.read().split())
 		for word in banned:
 			self.remove(word)
+		self.words = sorted(self.words, key=self.wordFreqVal, reverse=True)
 		self.results()
+
+	def loadWordFreq(self,FileName=''):
+		if FileName != '': self.wordFrequencyFile = FileName
+		with open(self.wordFrequencyFile) as word_file:
+			wordFreqList = list(set(word_file.read().split('\n')))
+		wordFreq={}
+		for word in wordFreqList:
+			w=word.split(' ')
+			if len(w)>1:
+				wordFreq[w[0]]=int(w[1])
+		self.wordFreq=wordFreq
+
+	def loadLetterFreq(self,FileName=''):
+		if FileName != '': self.LetterFrequencyFile = FileName
+		with open(self.LetterFrequencyFile) as word_file:
+			letterFreqList = list(set(word_file.read().split('\n')))
+		letterFreq={}
+		for letter in letterFreqList:
+			l=letter.split(' ')
+			if len(l)>1:
+				letterFreq[l[0]]=float(l[1])
+		self.letterFreq=letterFreq
 
 	def len(self,length:int):
 		newList=[]
@@ -123,15 +131,21 @@ class WordList():
 				cnt += 1
 		return cnt
 
+	def wordFreqVal(self,word:str):
+		if word not in self.wordFreq:
+			return 0
+		else:
+			return self.wordFreq[word]
+
 	def wordVal(self,word:str):
 		value=0
 		ustr=''.join(sorted(list(set(word))))
-		for letter in LETTERS:
-			charList=''.join(sorted(list(set(letter["values"])-set(self.skips))))
+		for letter,weight in self.letterFreq.items():
+			charList=''.join(sorted(list(set(letter)-set(self.skips))))
 			if len(charList)> 0:
-				value += self.numMatches(ustr,charList)*letter["weight"]
+				value += self.numMatches(ustr,charList)*weight
 		if len(self.prefChars)> 0:
-			value += self.numMatches(ustr,self.prefChars)*10
+			value += self.numMatches(ustr,self.prefChars)*3
 		return value
 
 	def sortList(self):
@@ -156,3 +170,30 @@ class WordList():
 			print("disallowed: {s}".format(s=self.disallowed))
 			print("length: {s}".format(s=self.length))
 			print("skips: {s}".format(s=self.skips))
+
+	def set(self,word:str):
+		length=len(word)
+		if self.length > 0 and self.length < length:
+			length=self.length
+			print("Parameter is longer than Word, only using first {n} characters.".format(n=length))
+		for i in range(length):
+			if word[i].isalpha():
+				selfReport=self.selfReport
+				self.selfReport=False
+				self.force(word[i],i+1)
+				self.selfReport=selfReport
+		self.results()
+
+	def contains(self,word:str):
+		length=len(word)
+		if self.length > 0 and self.length < length:
+			length=self.length
+			print("Parameter is longer than Word, only using first {n} characters.".format(n=length))
+		for i in range(length):
+			if word[i].isalpha():
+				selfReport=self.selfReport
+				self.selfReport=False
+				self.need(word[i])
+				self.ban(word[i],i+1)
+				self.selfReport=selfReport
+		self.results()

@@ -27,3 +27,11 @@ p.bestWords()
 
 
 if 'pfg' in p.words[0].words: p.words[0].words.remove('pfg')
+
+with open("wikipedia-word-frequency/results/enwiki-2023-04-13.txt") as word_file:
+    words = list(set(word_file.read().split()))
+wordFreq={}
+for word in words:
+    w=word.split(' ')
+    wordFreq[w[0]]=int(w[1])
+

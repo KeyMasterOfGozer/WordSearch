@@ -1,3 +1,9 @@
 [submodule "english-words"]
 	path = english-words
 	url = https://github.com/dwyl/english-words.git
+[submodule "dictionary"]
+	path = dictionary
+	url = https://github.com/dolph/dictionary.git
+[submodule "wikipedia-word-frequency"]
+	path = wikipedia-word-frequency
+	url = https://github.com/IlyaSemenov/wikipedia-word-frequency.git
