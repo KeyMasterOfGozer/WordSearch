@@ -34,11 +34,11 @@ class WordList():
 				print("Word Count: {cnt}".format(cnt=cnt))
 
 	def __post_init__(self):
+		self.loadWordFreq()
+		self.loadLetterFreq()
 		if len(self.words) == 0: 
 			self.loadWords()
 		if self.length > 0: self.len(self.length)
-		self.loadWordFreq()
-		self.loadLetterFreq()
 
 	def loadWords(self,FileName=''):
 		if FileName != '': self.dictionary = FileName
@@ -53,7 +53,8 @@ class WordList():
 			banned = set(word_file.read().split())
 		for word in banned:
 			self.remove(word)
-		self.words = sorted(self.words, key=self.wordFreqVal, reverse=True)
+		tmpList = sorted(self.words, key=self.wordFreqVal, reverse=True)
+		self.words=tmpList
 		self.results()
 
 	def loadWordFreq(self,FileName=''):
