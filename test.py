@@ -9,29 +9,16 @@ w.need('b')
 
 
 from phrase import Phrase
-p=Phrase([5,6])
-p.disallow('ohrla')
-p.words[0].disallow('e')
-p.words[0].force('t',2)
-p.words[0].need('is')
-p.words[1].disallow('is')
-p.words[1].force('d',6)
-p.words[1].need('en')
-p.results()
-
-from phrase import Phrase
-p=Phrase([3,3,5,2,4])
+p=Phrase([4,3,9,5])
+p.disallow('')
+p.set(['','','',''])
+p.contains(['','','',''])
+p.wrongWord(['','','',''])
+p.wordDisallow('',1)
+p.wordDisallow('',2)
+p.wordDisallow('',3)
+p.wordDisallow('',4)
 p.sortWords()
 p.bestWords()
 
-
-
-if 'pfg' in p.words[0].words: p.words[0].words.remove('pfg')
-
-with open("wikipedia-word-frequency/results/enwiki-2023-04-13.txt") as word_file:
-    words = list(set(word_file.read().split()))
-wordFreq={}
-for word in words:
-    w=word.split(' ')
-    wordFreq[w[0]]=int(w[1])
-
+p.list()
