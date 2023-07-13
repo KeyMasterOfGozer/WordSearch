@@ -1,3 +1,7 @@
+# Specific to this Project
+letter-freq-gen.txt
+word-freq-gen.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

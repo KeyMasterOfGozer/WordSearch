@@ -65,7 +65,8 @@ class WordList():
 		for word in wordFreqList:
 			w=word.split(' ')
 			if len(w)>1:
-				wordFreq[w[0]]=int(w[1])
+				if w[0] not in wordFreq:
+					wordFreq[w[0]]=int(w[1])
 		self.wordFreq=wordFreq
 
 	def loadLetterFreq(self,FileName=''):
@@ -198,3 +199,34 @@ class WordList():
 				self.ban(word[i],i+1)
 				self.selfReport=selfReport
 		self.results()
+
+	def genLetterFreqFile(self,filename:str='letter-freq-gen.txt'):
+		letters={}
+		totalLetters=0
+
+		for word in self.words:
+			for letter in word:
+				if letter in letters:
+					letters[letter]+=1
+				else:
+					letters[letter]=1
+				totalLetters+=1
+
+		with open(filename,'w') as word_file:
+			i=0
+			for letter, cnt in letters.items():
+				if i!=0: word_file.write("\n")
+				i+=1
+				word_file.write("{letter} {percent:.2f}".format(
+					letter=letter,
+					percent=cnt/totalLetters*100))
+
+	def genWordFreqFile(self,filename:str='word-freq-gen.txt'):
+		with open(filename,'w') as word_file:
+			i=0
+			for word, cnt in self.wordFreq.items():
+				if i!=0: n=word_file.write("\n")
+				i+=1
+				n=word_file.write("{word} {cnt}".format(
+					word=word,
+					cnt=cnt))

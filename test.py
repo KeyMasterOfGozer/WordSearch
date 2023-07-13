@@ -22,3 +22,24 @@ p.sortWords()
 p.bestWords()
 
 p.list()
+
+
+# Build Lists for including þ thorn in English Language
+from wordlist import WordList
+w = WordList()
+newWords=[]
+
+for word in w.words:
+    newWords.append(word.replace('th','þ'))
+
+w.words=newWords
+w.genLetterFreqFile()
+
+newWordFreq={}
+
+for word,cnt in w.wordFreq.items():
+    newWordFreq[word.replace('th','þ')]=cnt
+
+w.wordFreq=newWordFreq
+
+w.genWordFreqFile()
