@@ -180,10 +180,10 @@ class WordList():
 			print("Parameter is longer than Word, only using first {n} characters.".format(n=length))
 		for i in range(length):
 			if word[i].isalpha():
-				selfReport=self.selfReport
+				currentSelfReport=self.selfReport
 				self.selfReport=False
 				self.force(word[i],i+1)
-				self.selfReport=selfReport
+				self.selfReport=currentSelfReport
 		self.results()
 
 	def contains(self,word:str):
@@ -230,3 +230,11 @@ class WordList():
 				n=word_file.write("{word} {cnt}".format(
 					word=word,
 					cnt=cnt))
+
+	def genWordFile(self,filename:str='word-gen.txt'):
+		with open(filename,'w') as word_file:
+			i=0
+			for word in self.words:
+				if i!=0: n=word_file.write("\n")
+				i+=1
+				n=word_file.write(word)

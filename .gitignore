@@ -1,6 +1,7 @@
 # Specific to this Project
 letter-freq-gen.txt
 word-freq-gen.txt
+word-gen.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
