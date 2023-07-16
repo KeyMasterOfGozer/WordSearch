@@ -4,7 +4,7 @@ This is intended as a helper to find guesses to plug in for wordl type games.
  
 ## Classes
 
-There are 2 main components written as python classes. It's my preference to use it from a python commandline, but the classes could be used by anohter program as well.
+There are 3 main components written as python classes. It's my preference to use it from a python commandline, but the classes could be used by anohter program as well.
 
 ### WordList
 This class loads a dictionary of words (default is [Dolph's popular English words](https://github.com/dolph/dictionary), but any dictionary can be set), which it uses to build a WordList that can be filtered through various commands to whittle down a minimal list of words to pick from.
@@ -54,6 +54,25 @@ This is for *black* letters in Wordl.  Letters that are not in the word.
 ```python
 # Filter out words that have A, B, or C in any position.
 w.disallow('abc')
+```
+
+### Decoder
+This class makes use of the WordLost class to help a user decypher a simple substitution cypher.
+
+```python
+cypher="""f qtsl rjxxflj htsyfnsx qtyx tk
+xyfynxynhfq hqzjx ymfy hfs gj
+zxji yt fsfqdxj bmfy ymj rtxy
+kwjvzjsy qjyyjwx fwj, fsi jajs
+ymj rtxy htrrts ufnwx tw ywnuqjx
+tk qjyyjwx hfs mjqu yt gwjfp
+ymj htij"""
+from decoder import Decoder
+d=Decoder(cypher)
+d.printStatus()
+d.solveLetter('j','e')
+d.solveLetter('y','t')
+d.applyNewMatches()
 ```
 
 ### Phrase
