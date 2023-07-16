@@ -69,4 +69,6 @@ d.solveLetter('j','e')
 d.solveLetter('y','t')
 d.applyNewMatches()
 
+d.checkWord('gwjfp')
+d.wordList.show(20)
 
