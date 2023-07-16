@@ -12,6 +12,7 @@ class WordList():
 	wordFrequencyFile: str = 'wikipedia-word-frequency/results/enwiki-2023-04-13.txt'
 	LetterFrequencyFile: str = 'letter-freq-eng-text.txt'
 	selfReport: bool = True
+	skipInit: bool = False
 	skips:str=''
 	sortedList: List[str] = field(default_factory=list)
 	bestWord:str=''
@@ -34,11 +35,12 @@ class WordList():
 				print("Word Count: {cnt}".format(cnt=cnt))
 
 	def __post_init__(self):
-		self.loadWordFreq()
-		self.loadLetterFreq()
-		if len(self.words) == 0: 
-			self.loadWords()
-		if self.length > 0: self.len(self.length)
+		if not self.skipInit:
+			self.loadWordFreq()
+			self.loadLetterFreq()
+			if len(self.words) == 0: 
+				self.loadWords()
+			if self.length > 0: self.len(self.length)
 
 	def loadWords(self,FileName=''):
 		if FileName != '': self.dictionary = FileName

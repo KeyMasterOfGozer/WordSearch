@@ -72,3 +72,67 @@ d.applyNewMatches()
 d.checkWord('gwjfp')
 d.wordList.show(20)
 
+
+
+# Decode with Thorn Included Cypher
+cypher="""ieþtw sft adpwy le þsdt syvswctm,
+anl xt oeef mhsdd lskt xtpf
+chswctm le gpvt xtpf defy xtpf
+aenwlr meiw,
+me xsl meew xt ipwt þsr bdei.
+"""
+from decoder import Decoder
+d=Decoder(
+    cypher=cypher,
+    dictionary = 'word-gen.txt',
+	wordFrequencyFile = 'word-freq-gen.txt',
+	LetterFrequencyFile = 'letter-freq-gen.txt'
+    )
+d.printStatus()
+d.solveLetter('t','e')
+d.solveLetter('e','o')
+d.solveLetter('s','a')
+d.solveLetter('f','r')
+d.solveLetter('w','n')
+d.solveLetter('m','s')
+d.applyNewMatches()
+d.applyNewMatches()
+d.solveLetter('d','l')
+d.solveLetter('p','i')
+d.applyNewMatches()
+d.solveLetter('l','t')
+d.applyNewMatches()
+d.solveLetter('l','t')
+d.solveLetter('x','þ')
+d.checkWord('þsdt')
+d.wordList.show(20)
+d.solveLetter('þ','m')
+d.checkWord('ieþtw')
+d.wordList.show(20)
+d.solveLetter('i','w')
+d.solveLetter('o','p')
+d.solveLetter('k','k')
+d.solveLetter('g','g')
+d.solveLetter('b','f')
+"""
+**********
+ Cypher Frequency Order:teswfdplmxiþaycvnhrokgb
+                Matches:eoanrlitsþwmbdcvuhypkgf
+Natural Frequency Order:eisarntolcdugpmhbyfkvwþxzjq
+**********
+ieþtw sft adpwy le þsdt syvswctm,
+anl xt oeef mhsdd lskt xtpf
+chswctm le gpvt xtpf defy xtpf
+aenwlr meiw,
+me xsl meew xt ipwt þsr bdei.
+
+**********
+women are blind to male advances,
+but þe poor shall take þeir
+chances to give þeir lord þeir
+bounty sown,
+so þat soon þe wine may flow.
+
+**********
+"""
+

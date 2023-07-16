@@ -15,13 +15,14 @@ class Decoder():
     dictionary: str = 'dictionary/popular.txt'
     wordFrequencyFile: str = 'wikipedia-word-frequency/results/enwiki-2023-04-13.txt'
     LetterFrequencyFile: str = 'letter-freq-eng-text.txt'
-    wordList: WordList = WordList(selfReport=False)
+    wordList: WordList = WordList(skipInit=True,selfReport=False)
 
     def __post_init__(self):
         self.wordList=WordList(
             dictionary = self.dictionary,
             wordFrequencyFile = self.wordFrequencyFile,
-            LetterFrequencyFile = self.LetterFrequencyFile
+            LetterFrequencyFile = self.LetterFrequencyFile,
+            selfReport=False
         )
         self.getCypherLetters()
         self.cypherLetterList=list(self.cypherLetters.keys())
@@ -60,9 +61,9 @@ class Decoder():
             if letter.isalpha():
                 decryptWord = decryptWord + self.matches[letter]
         self.wordList.loadWords()
-        self.wordList.selfReport=False
+        #self.wordList.selfReport=False
         self.wordList.len(len(decryptWord))
-        self.wordList.selfReport=False
+        #self.wordList.selfReport=False
         self.wordList.set(decryptWord)
         return len( self.wordList.words), decryptWord
 
@@ -106,10 +107,12 @@ class Decoder():
         matchList=[]
         for i in range(len(self.cypherLetterList)):
             matchList.append(self.matches[self.cypherLetterList[i]])
-        print(''.join(self.cypherLetterList))
-        print(''.join(matchList))
-        print(''.join(self.clearLetterList))
+        print('**********')
+        print(' Cypher Frequency Order:'+''.join(self.cypherLetterList))
+        print('                Matches:'+''.join(matchList))
+        print('Natural Frequency Order:'+''.join(self.clearLetterList))
         print('**********')
         print(self.cypher)
         print('**********')
         print(self.solved)
+        print('**********')
