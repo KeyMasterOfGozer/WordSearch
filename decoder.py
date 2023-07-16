@@ -59,26 +59,24 @@ class Decoder():
         for letter in cypherWord:
             if letter.isalpha():
                 decryptWord = decryptWord + self.matches[letter]
-        if ' ' in decryptWord:
-            newWord=True
-        else:
-            newWord=False
         self.wordList.loadWords()
         self.wordList.selfReport=False
         self.wordList.len(len(decryptWord))
         self.wordList.selfReport=False
         self.wordList.set(decryptWord)
-        return len( self.wordList.words), newWord
+        return len( self.wordList.words), decryptWord
 
     def checkWords(self):
         words=self.cypher.split()
         self.newMatches={}
         for word in words:
-            cnt,newWord=self.checkWord(word)
+            cnt,decryptWord=self.checkWord(word)
             if cnt == 0:
-                print("Word {cypher} can't be solved.".format(
-                    cypher=word))
-            elif cnt == 1 and newWord:
+                print("Word {cypher} can't be solved({solve}).".format(
+                    cypher=word,
+                    solve=decryptWord
+                    ))
+            elif cnt == 1 and ' ' in decryptWord:
                 print("Word {cypher} is {solve}".format(
                     cypher=word,
                     solve=self.wordList.words[0]
