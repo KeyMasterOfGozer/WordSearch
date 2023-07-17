@@ -7,11 +7,12 @@ class Decoder():
     cypher: str
     solved: str = ''
     matches: Dict = field(default_factory=dict)
+    used: Dict = field(default_factory=dict)
     newMatches: Dict = field(default_factory=dict)
     cypherLetters: Dict = field(default_factory=dict)
-    cypherLetterList: List[float] = field(default_factory=list)
+    cypherLetterList: List[str] = field(default_factory=list)
     clearLetters: Dict = field(default_factory=dict)
-    clearLetterList: List[float] = field(default_factory=list)
+    clearLetterList: List[str] = field(default_factory=list)
     dictionary: str = 'dictionary/popular.txt'
     wordFrequencyFile: str = 'wikipedia-word-frequency/results/enwiki-2023-04-13.txt'
     LetterFrequencyFile: str = 'letter-freq-eng-text.txt'
@@ -47,6 +48,9 @@ class Decoder():
         for letter in self.cypher:
             if letter.isalpha():
                 self.matches[letter]=' '
+        for letter in self.clearLetterList:
+            if letter.isalpha():
+                self.used[letter]=' '
  
     def getCypherLetterVal(self,key:str):
         return self.cypherLetters[key]
@@ -61,31 +65,32 @@ class Decoder():
             if letter.isalpha():
                 decryptWord = decryptWord + self.matches[letter]
         self.wordList.loadWords()
-        #self.wordList.selfReport=False
         self.wordList.len(len(decryptWord))
-        #self.wordList.selfReport=False
         self.wordList.set(decryptWord)
         return len( self.wordList.words), decryptWord
 
     def checkWords(self):
         words=self.cypher.split()
+        retstr=''
         self.newMatches={}
         for word in words:
             cnt,decryptWord=self.checkWord(word)
             if cnt == 0:
-                print("Word {cypher} can't be solved({solve}).".format(
+                retstr = retstr + "Word {cypher} can't be solved({solve}).\n".format(
                     cypher=word,
                     solve=decryptWord
-                    ))
+                    )
             elif cnt == 1 and ' ' in decryptWord:
-                print("Word {cypher} is {solve}".format(
+                retstr = retstr + "Word {cypher} is {solve}\n".format(
                     cypher=word,
                     solve=self.wordList.words[0]
-                    ))
+                    )
                 for i in range(len(self.wordList.words[0])):
                     if self.matches[word[i]] == ' ':
                         self.newMatches[word[i]]=self.wordList.words[0][i]
-        print("New Matches: {nm}".format(nm=self.newMatches))
+        retstr = retstr + "New Matches: {nm}".format(nm=self.newMatches)
+        print(retstr)
+        return retstr
 
     def solveLetter(self,old:str,new:str):
         newsub=''
@@ -96,23 +101,42 @@ class Decoder():
                 newsub=newsub+self.solved[i]
         self.solved=newsub
         self.matches[old]=new
-        self.printStatus()
-        self.checkWords()
+        self.used[new]=old
+        retstr = self.printStatus()
+        retstr = retstr + self.checkWords()
+        return retstr
 
     def applyNewMatches(self):
+        retstr = ''
         for old,new in self.newMatches.items():
-            self.solveLetter(old,new)
+            retstr = self.solveLetter(old,new)
+        return retstr
 
     def printStatus(self):
         matchList=[]
         for i in range(len(self.cypherLetterList)):
             matchList.append(self.matches[self.cypherLetterList[i]])
-        print('**********')
-        print(' Cypher Frequency Order:'+''.join(self.cypherLetterList))
-        print('                Matches:'+''.join(matchList))
-        print('Natural Frequency Order:'+''.join(self.clearLetterList))
-        print('**********')
-        print(self.cypher)
-        print('**********')
-        print(self.solved)
-        print('**********')
+        usedList=[]
+        for i in range(len(self.clearLetterList)):
+            usedList.append(self.used[self.clearLetterList[i]])
+        retstr="""
+**********
+ Cypher Frequency Order: {cypherLetters}
+                Matches: {matches}
+                   Used: {used}
+Natural Frequency Order: {clearLetters}
+**********
+{cypher}
+**********
+{solved}
+**********
+""".format(
+            cypherLetters=''.join(self.cypherLetterList),
+            matches=''.join(matchList),
+            used=''.join(usedList),
+            clearLetters=''.join(self.clearLetterList),
+            cypher=self.cypher,
+            solved=self.solved
+            )
+        print(retstr)
+        return retstr

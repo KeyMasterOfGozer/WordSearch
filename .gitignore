@@ -2,6 +2,7 @@
 letter-freq-gen.txt
 word-freq-gen.txt
 word-gen.txt
+discord.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
