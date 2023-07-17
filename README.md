@@ -106,8 +106,9 @@ solveLetter() applies the matches to the solve text and shows the matches in the
 
 If you think you have a wrong Match, you can back it out by applying a space to replace the wrong match to "Erase" it.
 ```python
-d.solveLetter('x',' ')```
-
+d.solveLetter('x',' ')
+```
+You get results like this:
 ```
 >>> d.solveLetter('y','t')
 jyfxtsqwhmrnkziulgdbvap
