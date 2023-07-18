@@ -19,59 +19,62 @@ def Message(msg,lvl=0):
 
 def parse(input,author,MultiLine=0):
 	# parse the input string from the message so that we can see what we need to do
-	parts = input.strip().split()
-	Message(parts,1)
+    parts = input.strip().split()
+    Message(parts,1)
 
-	AuthorName = author
+    AuthorName = author
 
 	#drop out if this is not a Roll command
-	if len(parts) == 0 or parts[0].upper() not in ['!','/','\\']:
+    if len(parts) == 0 or parts[0].upper() not in ['!','/','\\']:
 		#Try to make a command if first character is !
-		if parts[0][0]=="!":
-			pt=["!",parts[0][1:],parts[1:]]
-			parts=pt
-		else:
-			Message("Not a command",1)
-			return None
+        if parts[0][0]=="!":
+            pt=["!",parts[0][1:],parts[1:]]
+            parts=pt
+        else:
+            Message("Not a command",1)
+            return None
 
-	try:
-		Message("Command: "+parts[1].upper(),1)
-		if parts[1].upper() == "NEWCYPHER":
-			cypher = ''.join(parts[2:])
-			decoder = Decoder(cypher)
+    try:
+        Message("Command: "+parts[1].upper(),1)
+        if parts[1].upper() == "NEWCYPHER":
+            cypher = ''.join(parts[2:])
+            decoder = Decoder(cypher,
+		        dictionary=language["dictionary"],
+                wordFrequencyFile=language["wordFrequencyFile"],
+                LetterFrequencyFile=language["LetterFrequencyFile"]
+		        )
 			#give user message so he knows it's saved
-			retstr = "{Author} posed a new Cypher:\n{cypher}".format(
+            retstr = "{Author} posed a new Cypher:\n{cypher}".format(
 				Author=author,
 		        cypher=decoder.cypher
 		        )
-		elif parts[1].upper() == "ECHO":
-			retstr = "{Author}: {rollreturn}".format(Author=AuthorName,rollreturn=replaceVars(" ".join(parts[2:]),Users[author]['vars']))
-		elif parts[1].upper() == "USE":
-			Users=refreshDataFile(author)
+        elif parts[1].upper() == "DICTIONARY":
+            if len(parts)<5:
+                retstr= """{Author}: The **dictionary** command must have 3 parameters.
+Dictionary, Word Frequency File Name, and Letter Frequency Filename.
+Example:
+!dictionary dictionary/popular.txt wikipedia-word-frequency/results/enwiki-2023-04-13.txt letter-freq-eng-text.txt""".format(
+					Author=AuthorName
+		            )
+            else:
+                tempCypher = decoder.cypher
+                language["dictionary"]=parts[2]
+                language["wordFrequencyFile"]=parts[3]
+                language["LetterFrequencyFile"]=parts[4]
+                decoder = Decoder(tempCypher,
+                    dictionary=language["dictionary"],
+                    wordFrequencyFile=language["wordFrequencyFile"],
+                    LetterFrequencyFile=language["LetterFrequencyFile"]
+                    )
+                retstr = "{Author}: {output}".format(
+                     Author=AuthorName,
+                     output=decoder._printStatus()
+                     )
+        elif parts[1].upper() == "USE":
 			# run the macro
-			retstr = parse(Users[author]['macros'][parts[2]],author,MultiLine)
-		elif parts[1].upper() == "LIST":
-			Users=refreshDataFile(author)
-			# build list of stored commands
-			retstr = "\n{Author}'s Macros:".format(Author=author)
-			for key,value in Users[author]['macros'].items():
-				retstr += "\n{MacroName}:\t{MacroText}".format(MacroName=key,MacroText=value)
-			retstr += "\n{Author}'s Variables:".format(Author=author)
-			for key,value in Users[author]['vars'].items():
-				retstr += "\n{MacroName}:\t{MacroText}".format(MacroName=key,MacroText=value)
-		elif parts[1].upper() == "LOAD":
-			Users=refreshDataFile(author)
-			# build list of stored commands
-			if len(parts) > 2 and parts[2].lstrip()[0] == "{":
-				Users[author]['macros'].update(json.loads(" ".join(parts[2:])))
-				retstr = "\n{Author} added or updated Macros".format(Author=author)
-				# save to DB file for next time
-				with open(UserFile,"w") as f:
-					f.write(json.dumps(Users,indent=2))
-			else:
-				retstr = "\n{Author}'s Macro string was not recognized JSON:".format(Author=author)
-		elif parts[1].upper() in ["HELP"]:
-			retstr = '''
+            retstr = ""
+        elif parts[1].upper() in ["HELP"]:
+            retstr = '''
 My Key words are "!", "/", or "\\"
 Make simple roll with:```/roll 2d6+4```
 Add description text:```/roll 2d6+4 Sword Damage```
@@ -93,13 +96,13 @@ A Gun Attack:```/roll define gun 1d20+12 Gun to hit```
 Damage for the gun attack:```/roll define gun-dam 1d8+6 Piercing Damage```
 Combo macro that uses the other 2 multiple times:```/roll define atk echo **Normal Gun Attack**; ! echo 1st Shot:; ! use gun; ! use gun-dam; ! echo 2nd Shot:; ! use gun; ! use gun-dam```
 '''
-		else:
-			retstr = '{Author}, your command was not understood.'.format(Author=author)
-	except Exception as e:
-		print(e)
-		retstr = None
+        else:
+            retstr = '{Author}, your command was not understood.'.format(Author=author)
+    except Exception as e:
+        print(e)
+        retstr = None
 
-	return retstr
+    return retstr
 
 
 #########################################################################
@@ -109,6 +112,11 @@ Combo macro that uses the other 2 multiple times:```/roll define atk echo **Norm
 
 client = discord.Client()
 decoder = Decoder('')
+language= {
+    'dictionary':'dictionary/popular.txt',
+    'wordFrequencyFile':'wikipedia-word-frequency/results/enwiki-2023-04-13.txt',
+    'LetterFrequencyFile':'letter-freq-eng-text.txt'
+    }
 
 # This block is the work horse part
 @client.event

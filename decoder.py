@@ -69,7 +69,7 @@ class Decoder():
         self.wordList.set(decryptWord)
         return len( self.wordList.words), decryptWord
 
-    def checkWords(self):
+    def _checkWords(self):
         words=self.cypher.split()
         retstr=''
         self.newMatches={}
@@ -89,10 +89,12 @@ class Decoder():
                     if self.matches[word[i]] == ' ':
                         self.newMatches[word[i]]=self.wordList.words[0][i]
         retstr = retstr + "New Matches: {nm}".format(nm=self.newMatches)
-        print(retstr)
         return retstr
 
-    def solveLetter(self,old:str,new:str):
+    def checkWords(self):
+        print(self._checkWords())
+
+    def _solveLetter(self,old:str,new:str):
         newsub=''
         for i in range(len(self.cypher)):
             if self.cypher[i]==old:
@@ -102,17 +104,23 @@ class Decoder():
         self.solved=newsub
         self.matches[old]=new
         self.used[new]=old
-        retstr = self.printStatus()
-        retstr = retstr + self.checkWords()
+        retstr = self._printStatus()
+        retstr = retstr + self._checkWords()
+        return retstr
+
+    def solveLetter(self,old:str,new:str):
+        print(self._solveLetter(old,new))
+ 
+    def _applyNewMatches(self):
+        retstr = ''
+        for old,new in self.newMatches.items():
+            retstr = self._solveLetter(old,new)
         return retstr
 
     def applyNewMatches(self):
-        retstr = ''
-        for old,new in self.newMatches.items():
-            retstr = self.solveLetter(old,new)
-        return retstr
+        print(self._applyNewMatches())
 
-    def printStatus(self):
+    def _printStatus(self):
         matchList=[]
         for i in range(len(self.cypherLetterList)):
             matchList.append(self.matches[self.cypherLetterList[i]])
@@ -138,5 +146,7 @@ Natural Frequency Order: {clearLetters}
             cypher=self.cypher,
             solved=self.solved
             )
-        print(retstr)
         return retstr
+
+    def printStatus(self):
+        print(self._printStatus())
