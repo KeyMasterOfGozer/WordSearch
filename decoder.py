@@ -16,7 +16,7 @@ class Decoder():
     dictionary: str = 'dictionary/popular.txt'
     wordFrequencyFile: str = 'wikipedia-word-frequency/results/enwiki-2023-04-13.txt'
     LetterFrequencyFile: str = 'letter-freq-eng-text.txt'
-    wordList: WordList = WordList(skipInit=True,selfReport=False)
+    wordList: WordList = field(default_factory=WordList)
 
     def __post_init__(self):
         self.wordList=WordList(

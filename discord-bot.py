@@ -1,35 +1,54 @@
 import json
 import discord
-import re
 from decoder import Decoder
 
 
 Verbosity = 0
-SecurityFile = 'discord.json'
+ConfigFile = 'discord.json'
 # Read in Security File
-with open(SecurityFile,"r") as f:
-	Security = json.load(f)
+with open(ConfigFile,"r") as f:
+	Config = json.load(f)
 
-TOKEN = Security["Token"]
+TOKEN = Config["Tokens"]["11House-Crypt"]["Token"]
+Languages = Config["Languages"]
 
 def Message(msg,lvl=0):
 	# Send a message based on Debug level
 	if lvl <= Verbosity:
 		print(msg)
+                
+def listWords(WordList:list):
+    retstr=''
+    i=1
+    for word in WordList:
+        if i%5!=1: retstr=retstr+" "
+        retstr=retstr+word
+        if i%5==0: retstr=retstr+"\n"
+        i+=1
+    return retstr
 
-def parse(input,author,MultiLine=0):
+def parse(input,author):
 	# parse the input string from the message so that we can see what we need to do
     parts = input.strip().split()
+    Message(input,1)
     Message(parts,1)
+
+    global decoder
+    global language
+    global Languages
 
     AuthorName = author
 
 	#drop out if this is not a Roll command
-    if len(parts) == 0 or parts[0].upper() not in ['!','/','\\']:
+    if len(parts) == 0:
+        return None
+    if parts[0].upper() not in ['!','/','\\']:
 		#Try to make a command if first character is !
         if parts[0][0]=="!":
-            pt=["!",parts[0][1:],parts[1:]]
+            pt=["!",parts[0][1:]]
+            pt.extend(parts[1:])
             parts=pt
+            Message(parts,1)
         else:
             Message("Not a command",1)
             return None
@@ -37,64 +56,87 @@ def parse(input,author,MultiLine=0):
     try:
         Message("Command: "+parts[1].upper(),1)
         if parts[1].upper() == "NEWCYPHER":
-            cypher = ''.join(parts[2:])
+            cypher = ' '.join(parts[2:])
+            Message(cypher,1)
             decoder = Decoder(cypher,
-		        dictionary=language["dictionary"],
-                wordFrequencyFile=language["wordFrequencyFile"],
-                LetterFrequencyFile=language["LetterFrequencyFile"]
+                    dictionary=Languages[language]["dictionary"],
+                    wordFrequencyFile=Languages[language]["wordFrequencyFile"],
+                    LetterFrequencyFile=Languages[language]["LetterFrequencyFile"]
 		        )
 			#give user message so he knows it's saved
             retstr = "{Author} posed a new Cypher:\n{cypher}".format(
 				Author=author,
-		        cypher=decoder.cypher
+		        cypher=decoder._printStatus()
 		        )
-        elif parts[1].upper() == "DICTIONARY":
-            if len(parts)<5:
-                retstr= """{Author}: The **dictionary** command must have 3 parameters.
-Dictionary, Word Frequency File Name, and Letter Frequency Filename.
+            Message(retstr,1)
+        elif parts[1].upper() == "LANGUAGE":
+            invalidParams="""{Author}: The **Language** command must have 1 parameter.
+It must be one of {langs}.
 Example:
-!dictionary dictionary/popular.txt wikipedia-word-frequency/results/enwiki-2023-04-13.txt letter-freq-eng-text.txt""".format(
+!language ThornedEnglish""".format(
+					Author=AuthorName,
+                    lang=Languages.keys()
+		            )
+            if len(parts)<3:
+                retstr= invalidParams
+            else:
+                if parts[2] not in Languages.keys():
+                     retstr = invalidParams
+                else:
+                    tempCypher = decoder.cypher
+                    language=parts[2]
+                    decoder = Decoder(tempCypher,
+                        dictionary=Languages[language]["dictionary"],
+                        wordFrequencyFile=Languages[language]["wordFrequencyFile"],
+                        LetterFrequencyFile=Languages[language]["LetterFrequencyFile"]
+                        )
+                    retstr = "{Author}: {output}".format(
+                        Author=AuthorName,
+                        output="```"+decoder._printStatus()+"```"
+                        )
+        elif parts[1].upper() == "SOLVELETTER":
+            if len(parts)<4:
+                retstr= """{Author}: The **SolveLetter** command must have 2 parameters.
+1) Cypher Letter to be replaced
+2) Clear Text Letter to replace it with
+Example:
+!SolveLetter j e""".format(
 					Author=AuthorName
 		            )
             else:
-                tempCypher = decoder.cypher
-                language["dictionary"]=parts[2]
-                language["wordFrequencyFile"]=parts[3]
-                language["LetterFrequencyFile"]=parts[4]
-                decoder = Decoder(tempCypher,
-                    dictionary=language["dictionary"],
-                    wordFrequencyFile=language["wordFrequencyFile"],
-                    LetterFrequencyFile=language["LetterFrequencyFile"]
-                    )
-                retstr = "{Author}: {output}".format(
-                     Author=AuthorName,
-                     output=decoder._printStatus()
-                     )
-        elif parts[1].upper() == "USE":
-			# run the macro
-            retstr = ""
+                retstr = "```"+decoder._solveLetter(parts[2],parts[3])+"```"
+        elif parts[1].upper() == "APPLYNEWMATCHES":
+           retstr = "```"+decoder._applyNewMatches()+"```"
+        elif parts[1].upper() == "PRINTSTATUS":
+           retstr = "```"+decoder._printStatus()+"```"
+        elif parts[1].upper() == "CHECKWORD":
+            if len(parts)<3:
+                retstr= """{Author}: The **CheckWord** command must have 1 parameter.
+It must be the cyphered word to test.
+Example:
+!CheckWord jxmtz""".format(
+					Author=AuthorName
+		            )
+            else:
+                cnt,decryptWord=decoder.checkWord(parts[2])
+                retstr = "```{cnt} possibilities for '{cryptWord}'='{decryptWord}':\n{WordList}```".format(
+                     cnt=cnt,
+                     cryptWord=parts[2],
+                     decryptWord=decryptWord,
+                     WordList=listWords(decoder.wordList.words)
+                )
+                
         elif parts[1].upper() in ["HELP"]:
             retstr = '''
 My Key words are "!", "/", or "\\"
-Make simple roll with:```/roll 2d6+4```
-Add description text:```/roll 2d6+4 Sword Damage```
-Print some text with no roll:```! echo Suck it monsters!!!!```
-Can roll multiple kinds of dice:```! 3d6+2d4-4```
-Use a semi-colon to execute multiple commands!
-***Macros***
-**Save**:```! define init 1d20+5 Intitative```
-**Use**:```! use init```or just ```! init```
-**List** your existing macros:```! list```
-**Load** up set of macros:```! load {'dex':'! 1d20+9 Dex Save','str':'! 1d20+5 Str Save'}```
-***Variables***
-**Set**:```! set Proficiency +4```
-**Use**:```! d20{Proficiency}+1 Sword to Hit```
-Variables are essentially string replacements.  If you need to add or subtract, make sure to put plus and minus signs in the variable, or in the macro, but not both.
-
-Macros can call macros.  Example:
-A Gun Attack:```/roll define gun 1d20+12 Gun to hit```
-Damage for the gun attack:```/roll define gun-dam 1d8+6 Piercing Damage```
-Combo macro that uses the other 2 multiple times:```/roll define atk echo **Normal Gun Attack**; ! echo 1st Shot:; ! use gun; ! use gun-dam; ! echo 2nd Shot:; ! use gun; ! use gun-dam```
+Load a Language with:```!Language English```
+Load a new Cypher with:```!Cypher
+Some Cypher Text
+Other lines of cypher```
+Match a Letter with:```!SolveLetter j e```
+Apply solved words' letters with:```!ApplyNewMatches```
+To Print the current state of the puzzle:```!PrintStatus```
+Check possible clear word matches with currently solved letters with the **CheckWord** command:```!CheckWord jsdek```
 '''
         else:
             retstr = '{Author}, your command was not understood.'.format(Author=author)
@@ -109,14 +151,12 @@ Combo macro that uses the other 2 multiple times:```/roll define atk echo **Norm
 # Main Program
 #########################################################################
 
+intents = discord.Intents.default()
+intents.message_content = True
 
-client = discord.Client()
+client = discord.Client(intents=intents)
 decoder = Decoder('')
-language= {
-    'dictionary':'dictionary/popular.txt',
-    'wordFrequencyFile':'wikipedia-word-frequency/results/enwiki-2023-04-13.txt',
-    'LetterFrequencyFile':'letter-freq-eng-text.txt'
-    }
+language= 'English'
 
 # This block is the work horse part
 @client.event
