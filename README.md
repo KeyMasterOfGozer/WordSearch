@@ -1,6 +1,8 @@
 # WordSearch helper
 
-This is intended as a helper to find guesses to plug in for wordl type games.  
+This is intended as a helper to find guesses to plug in for wordl type games.
+
+I included a simple Cryptogram Solver program, which I built a [Discord Bot Interface](DiscordBot.md).
  
 ## Classes
 
