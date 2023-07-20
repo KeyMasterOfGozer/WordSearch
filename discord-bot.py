@@ -1,7 +1,17 @@
 import json
+import sys
+import logging
 import discord
 from decoder import Decoder
 
+logger = logging.getLogger(__name__)
+stdout = logging.StreamHandler(stream=sys.stdout)
+fmt = logging.Formatter(
+    "%(asctime)s | %(levelname)s | %(message)s"
+)
+stdout.setFormatter(fmt)
+logger.addHandler(stdout)
+logger.setLevel(logging.INFO)
 
 Verbosity = 0
 ConfigFile = 'discord.json'
@@ -11,11 +21,7 @@ with open(ConfigFile,"r") as f:
 
 TOKEN = Config["Tokens"]["11House-Crypt"]["Token"]
 Languages = Config["Languages"]
-
-def Message(msg,lvl=0):
-	# Send a message based on Debug level
-	if lvl <= Verbosity:
-		print(msg)
+logger.debug(Languages)
                 
 def listWords(WordList:list):
     retstr=''
@@ -30,8 +36,8 @@ def listWords(WordList:list):
 def parse(input,author):
 	# parse the input string from the message so that we can see what we need to do
     parts = input.strip().split()
-    Message(input,1)
-    Message(parts,1)
+    logger.debug(input)
+    logger.debug(parts)
 
     global decoder
     global language
@@ -48,16 +54,16 @@ def parse(input,author):
             pt=["!",parts[0][1:]]
             pt.extend(parts[1:])
             parts=pt
-            Message(parts,1)
+            logger.debug(parts)
         else:
-            Message("Not a command",1)
+            logger.debug("Not a command")
             return None
 
     try:
-        Message("Command: "+parts[1].upper(),1)
+        logger.debug("Command: "+parts[1].upper())
         if parts[1].upper() == "NEWCYPHER":
             cypher = ' '.join(parts[2:])
-            Message(cypher,1)
+            logger.info("New Cypher:\n"+cypher)
             decoder = Decoder(cypher,
                     dictionary=Languages[language]["dictionary"],
                     wordFrequencyFile=Languages[language]["wordFrequencyFile"],
@@ -68,20 +74,23 @@ def parse(input,author):
 				Author=author,
 		        cypher=decoder._printStatus()
 		        )
-            Message(retstr,1)
+            logger.debug(retstr)
         elif parts[1].upper() == "LANGUAGE":
+            logger.debug("Language Command")
             invalidParams="""{Author}: The **Language** command must have 1 parameter.
-It must be one of {langs}.
+It must be one of {lang}.
 Example:
 !language ThornedEnglish""".format(
-					Author=AuthorName,
-                    lang=Languages.keys()
+					Author=author,
+                    lang=json.dumps(list(Languages.keys()))
 		            )
             if len(parts)<3:
+                logger.debug("Not Enough Language Parameters")
                 retstr= invalidParams
             else:
                 if parts[2] not in Languages.keys():
-                     retstr = invalidParams
+                    logger.debug("Not a valid Language [{lang}].".format(lang=parts[2]))
+                    retstr = invalidParams
                 else:
                     tempCypher = decoder.cypher
                     language=parts[2]
@@ -94,6 +103,7 @@ Example:
                         Author=AuthorName,
                         output="```"+decoder._printStatus()+"```"
                         )
+                    logger.info(retstr)
         elif parts[1].upper() == "SOLVELETTER":
             if len(parts)<4:
                 retstr= """{Author}: The **SolveLetter** command must have 2 parameters.
@@ -104,10 +114,13 @@ Example:
 					Author=AuthorName
 		            )
             else:
+                logger.info("SolveLetter [{old}] [{new}]".format(old=parts[2],new=parts[3]))
                 retstr = "```"+decoder._solveLetter(parts[2],parts[3])+"```"
         elif parts[1].upper() == "APPLYNEWMATCHES":
+           logger.info("ApplyNewMatches")
            retstr = "```"+decoder._applyNewMatches()+"```"
         elif parts[1].upper() == "PRINTSTATUS":
+           logger.info("PrintStatus")
            retstr = "```"+decoder._printStatus()+"```"
         elif parts[1].upper() == "CHECKWORD":
             if len(parts)<3:
@@ -118,6 +131,7 @@ Example:
 					Author=AuthorName
 		            )
             else:
+                logger.info("CheckWord [{word}]".format(word=parts[2]))
                 cnt,decryptWord=decoder.checkWord(parts[2])
                 retstr = "```{cnt} possibilities for '{cryptWord}'='{decryptWord}':\n{WordList}```".format(
                      cnt=cnt,
@@ -126,6 +140,12 @@ Example:
                      WordList=listWords(decoder.wordList.words)
                 )
                 
+        elif parts[1].upper() in ["LOGLEVEL"]:
+            if parts[2].upper() == "DEBUG":
+                logger.setLevel(logging.DEBUG)
+            elif parts[2].upper() == "INFO":
+                logger.setLevel(logging.INFO)
+            retstr= "LogLevel set to "+parts[2].upper()
         elif parts[1].upper() in ["HELP"]:
             retstr = '''
 My Key words are "!", "/", or "\\"
