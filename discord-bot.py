@@ -15,6 +15,7 @@ logger.setLevel(logging.INFO)
 
 Verbosity = 0
 ConfigFile = 'discord.json'
+StateFile = 'discord-bot-state.json'
 # Read in Security File
 with open(ConfigFile,"r") as f:
 	Config = json.load(f)
@@ -32,6 +33,36 @@ def listWords(WordList:list):
         if i%5==0: retstr=retstr+"\n"
         i+=1
     return retstr
+
+def saveState():
+    global decoder
+    global language
+    State={}
+    State["cypher"]=decoder.cypher
+    State["dictionary"]=decoder.dictionary
+    State["wordFrequencyFile"]=decoder.wordFrequencyFile
+    State["LetterFrequencyFile"]=decoder.LetterFrequencyFile
+    State["matches"]=decoder.matches
+    State['language']=language
+    with open(StateFile,"w") as f:
+        json.dump(State, f)
+
+def getState():
+    global decoder
+    global language
+    try:
+        with open(StateFile,"r") as f:
+            State = json.load(f)
+    except:
+        State={}
+    if "cypher" not in State: State["cypher"] = ""
+    if "dictionary" not in State: State["dictionary"] = "dictionary/popular.txt"
+    if "wordFrequencyFile" not in State: State["wordFrequencyFile"] = "wikipedia-word-frequency/results/enwiki-2023-04-13.txt"
+    if "LetterFrequencyFile" not in State: State["LetterFrequencyFile"] = "letter-freq-eng-text.txt"
+    if "matches" not in State: State["matches"] = {}
+    if "language" not in State: State["language"] = "English"
+    return State
+
 
 def parse(input,author):
 	# parse the input string from the message so that we can see what we need to do
@@ -121,7 +152,7 @@ Example:
            retstr = "```"+decoder._applyNewMatches()+"```"
         elif parts[1].upper() == "PRINTSTATUS":
            logger.info("PrintStatus")
-           retstr = "```"+decoder._printStatus()+"```"
+           retstr = "```"+decoder._printStatus()+decoder._checkWords()+"```"
         elif parts[1].upper() == "CHECKWORD":
             if len(parts)<3:
                 retstr= """{Author}: The **CheckWord** command must have 1 parameter.
@@ -175,19 +206,31 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 client = discord.Client(intents=intents)
-decoder = Decoder('')
-language= 'English'
+
+# Load up State of puzzle from last program termination and/or initialize everything
+State = getState()
+decoder = Decoder(State["cypher"],
+    dictionary=State["dictionary"],
+    wordFrequencyFile=State["wordFrequencyFile"],
+    LetterFrequencyFile=State["LetterFrequencyFile"]
+    )
+language= State["language"]
+for old, new in State["matches"].items():
+    if new != " ":
+        logger.info("SolveLetter [{old}] [{new}]".format(old=old,new=new))
+        tempstr = decoder._solveLetter(old,new)
 
 # This block is the work horse part
 @client.event
 async def on_message(message):
-	# we do not want the bot to reply to itself
-	if message.author == client.user:
-		return
-	# get the output for the given message
-	output = parse(message.content,message.author.display_name)
-	if output is not None:
-		await message.channel.send(output)
+    # we do not want the bot to reply to itself
+    if message.author == client.user:
+        return
+    # get the output for the given message
+    output = parse(message.content,message.author.display_name)
+    if output is not None:
+        saveState()
+        await message.channel.send(output)
 
 @client.event
 async def on_ready():
