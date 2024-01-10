@@ -3,22 +3,10 @@ import sys
 import logging
 import discord
 from decoder import Decoder
+from logger import logger
+from config import Config
 
-logger = logging.getLogger(__name__)
-stdout = logging.StreamHandler(stream=sys.stdout)
-fmt = logging.Formatter(
-    "%(asctime)s | %(levelname)s | %(message)s"
-)
-stdout.setFormatter(fmt)
-logger.addHandler(stdout)
-logger.setLevel(logging.INFO)
-
-Verbosity = 0
-ConfigFile = 'discord.json'
 StateFile = 'discord-bot-state.json'
-# Read in Security File
-with open(ConfigFile,"r") as f:
-	Config = json.load(f)
 
 TOKEN = Config["Tokens"]["11House-Crypt"]["Token"]
 Languages = Config["Languages"]
